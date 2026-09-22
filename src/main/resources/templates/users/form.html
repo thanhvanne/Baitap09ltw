@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+
+<head>
+    <title>Sửa User</title>
+</head>
+
+<body>
+
+<main
+    class="container narrow"
+    layout:fragment="content">
+
+    <h1>Sửa User</h1>
+
+    <form
+        class="form-grid"
+        th:action="@{/users/edit/{id}(id=${user.id})}"
+        th:object="${user}"
+        method="post">
+
+        <label>Username</label>
+        <input th:field="*{username}">
+
+        <label>Email</label>
+        <input th:field="*{email}">
+
+        <label>Họ tên</label>
+        <input th:field="*{fullName}">
+
+        <label>Role ID</label>
+        <input type="number"
+               th:field="*{roleId}">
+
+        <label>Enabled</label>
+        <input type="checkbox"
+               th:field="*{enabled}">
+
+        <div>
+            <button class="btn primary">
+                Lưu
+            </button>
+        </div>
+
+    </form>
+
+</main>
+
+</body>
+</html>

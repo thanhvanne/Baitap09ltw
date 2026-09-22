@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+
+<head>
+
+    <title>
+        Sản phẩm
+    </title>
+
+</head>
+
+
+<body>
+
+
+<main
+    class="container narrow"
+    layout:fragment="content">
+
+
+    <h1
+        th:text="${product.id == null
+            ? 'Thêm sản phẩm'
+            : 'Sửa sản phẩm'}">
+
+        Sản phẩm
+
+    </h1>
+
+
+    <form
+        class="form-grid"
+        th:action="@{/products/save}"
+        th:object="${product}"
+        method="post"
+        enctype="multipart/form-data">
+
+
+        <input
+            type="hidden"
+            th:field="*{id}">
+
+
+        <!-- ==============================
+             NAME
+             ============================== -->
+
+        <label>
+            Tên sản phẩm
+        </label>
+
+        <input
+            type="text"
+            th:field="*{name}"
+            required>
+
+
+        <!-- ==============================
+             DESCRIPTION
+             ============================== -->
+
+        <label>
+            Mô tả
+        </label>
+
+        <textarea
+            th:field="*{description}"
+            rows="5">
+        </textarea>
+
+
+        <!-- ==============================
+             PRICE
+             ============================== -->
+
+        <label>
+            Giá
+        </label>
+
+        <input
+            type="number"
+            step="0.01"
+            min="0"
+            th:field="*{price}"
+            required>
+
+
+        <!-- ==============================
+             OWNER - ADMIN ONLY
+             ============================== -->
+
+        <th:block
+            th:if="${#authorization.expression('hasRole(''ADMIN'')')}">
+
+
+            <label>
+                Chủ sở hữu
+            </label>
+
+
+            <select
+                th:field="*{userId}"
+                required>
+
+
+                <option value="">
+                    -- Chọn User --
+                </option>
+
+
+                <option
+                    th:each="u : ${users}"
+                    th:value="${u.id}"
+                    th:text="${u.fullName
+                        + ' (' + u.username + ')'}">
+                </option>
+
+
+            </select>
+
+
+        </th:block>
+
+
+        <!-- ==============================
+             USER INFO
+             ============================== -->
+
+        <th:block
+            th:if="${#authorization.expression('hasRole(''USER'')')}">
+
+
+            <label>
+                Chủ sở hữu
+            </label>
+
+
+            <div>
+
+                <strong
+                    th:text="${#authentication.principal.fullName}">
+                    User
+                </strong>
+
+                <span
+                    th:text="'('
+                        + ${#authentication.principal.username}
+                        + ')'">
+                </span>
+
+            </div>
+
+
+        </th:block>
+
+
+        <!-- ==============================
+             CURRENT IMAGE
+             ============================== -->
+
+        <th:block
+            th:if="${product.image != null
+                and !#strings.isEmpty(product.image)}">
+
+
+            <label>
+                Ảnh hiện tại
+            </label>
+
+
+            <div>
+
+                <img
+                    class="thumb"
+                    th:src="${product.image}"
+                    alt="Product">
+
+            </div>
+
+
+        </th:block>
+
+
+        <!-- ==============================
+             UPLOAD IMAGE
+             ============================== -->
+
+        <label>
+            Ảnh mới
+        </label>
+
+
+        <input
+            type="file"
+            name="file"
+            accept="image/*">
+
+
+        <!-- ==============================
+             BUTTON
+             ============================== -->
+
+        <div>
+
+            <button
+                class="btn primary"
+                type="submit">
+
+                Lưu
+
+            </button>
+
+
+            <a
+                class="btn secondary"
+                th:href="@{/products}">
+
+                Hủy
+
+            </a>
+
+        </div>
+
+
+    </form>
+
+
+</main>
+
+
+</body>
+
+</html>

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+
+<head>
+    <title>Dashboard</title>
+</head>
+
+<body>
+
+<main
+    class="container"
+    layout:fragment="content">
+
+    <h1>Dashboard</h1>
+
+    <div class="cards">
+
+        <div class="card">
+            <b>Tổng user</b>
+            <strong th:text="${userCount}">0</strong>
+        </div>
+
+        <div class="card">
+            <b>Tổng sản phẩm</b>
+            <strong th:text="${productCount}">0</strong>
+        </div>
+
+    </div>
+
+</main>
+
+</body>
+</html>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>Đăng ký</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+
+<body class="auth-page">
+
+<div class="auth-card">
+
+    <h1>Đăng ký</h1>
+
+    <div
+        class="alert error"
+        th:if="${error}"
+        th:text="${error}">
+    </div>
+
+    <form
+        th:action="@{/register}"
+        th:object="${registerDTO}"
+        method="post">
+
+        <label>Username</label>
+        <input th:field="*{username}" required>
+
+        <label>Email</label>
+        <input type="email" th:field="*{email}" required>
+
+        <label>Họ tên</label>
+        <input th:field="*{fullName}" required>
+
+        <label>Mật khẩu</label>
+        <input type="password"
+               th:field="*{password}"
+               required>
+
+        <button
+            class="btn primary full"
+            type="submit">
+            Đăng ký
+        </button>
+
+    </form>
+
+</div>
+
+</body>
+</html>

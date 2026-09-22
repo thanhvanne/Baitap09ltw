@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+
+<head>
+    <title>403</title>
+</head>
+
+<body>
+
+<main
+    class="container"
+    layout:fragment="content">
+
+    <div class="panel">
+
+        <h1>403 - Access Denied</h1>
+
+        <p>
+            Bạn không có quyền truy cập chức năng này.
+        </p>
+
+        <a
+            class="btn primary"
+            th:href="@{/}">
+
+            Trang chủ
+
+        </a>
+
+    </div>
+
+</main>
+
+</body>
+</html>
