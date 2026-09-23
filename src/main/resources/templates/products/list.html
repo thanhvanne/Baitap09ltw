@@ -11,34 +11,58 @@
 
 <body>
 
-<main
-    class="container"
-    layout:fragment="content">
+<main class="container"
+      layout:fragment="content">
 
     <div class="page-title">
 
-        <h1>Sản phẩm</h1>
+        <div>
+            <h1>Sản phẩm</h1>
 
-        <a
-            class="btn primary"
-            th:href="@{/products/new}">
-            Thêm sản phẩm
+            <p th:if="${#authorization.expression('hasRole(''ADMIN'')')}">
+                ADMIN đang xem toàn bộ sản phẩm.
+            </p>
+
+            <p th:if="${#authorization.expression('hasRole(''USER'')')}">
+                Bạn chỉ thấy sản phẩm thuộc tài khoản của mình.
+            </p>
+        </div>
+
+        <a class="btn primary"
+           th:href="@{/products/new}">
+            + Thêm sản phẩm
         </a>
 
     </div>
 
-    <form
-        class="search"
-        method="get">
+    <div class="alert success"
+         th:if="${success}"
+         th:text="${success}">
+    </div>
 
-        <input
-            name="keyword"
-            th:value="${keyword}"
-            placeholder="Tên sản phẩm">
+    <div class="alert error"
+         th:if="${error}"
+         th:text="${error}">
+    </div>
 
-        <button class="btn primary">
+    <form class="search"
+          method="get"
+          th:action="@{/products}">
+
+        <input name="keyword"
+               th:value="${keyword}"
+               placeholder="Tên sản phẩm">
+
+        <button class="btn primary"
+                type="submit">
             Tìm
         </button>
+
+        <a class="btn secondary"
+           th:if="${keyword != null and !#strings.isEmpty(keyword)}"
+           th:href="@{/products}">
+            Xóa tìm kiếm
+        </a>
 
     </form>
 
@@ -46,44 +70,77 @@
 
         <table>
 
+            <thead>
             <tr>
+                <th>ID</th>
                 <th>Ảnh</th>
                 <th>Tên</th>
                 <th>Giá</th>
                 <th>Chủ sở hữu</th>
+                <th>Ngày tạo</th>
                 <th>Thao tác</th>
             </tr>
+            </thead>
+
+            <tbody>
 
             <tr th:each="p : ${products.content}">
 
+                <td th:text="${p.id}"></td>
+
                 <td>
-                    <img
-                        th:if="${p.image != null}"
-                        class="thumb"
-                        th:src="${p.image}">
+
+                    <img th:if="${p.image != null
+                                and !#strings.isEmpty(p.image)}"
+                         class="thumb"
+                         th:src="${p.image}"
+                         alt="Product">
+
+                    <span th:unless="${p.image != null
+                                    and !#strings.isEmpty(p.image)}">
+                        Không có ảnh
+                    </span>
+
                 </td>
 
                 <td th:text="${p.name}"></td>
 
-                <td th:text="${p.price}"></td>
+                <td th:text="${#numbers.formatDecimal(
+                    p.price,
+                    0,
+                    'COMMA',
+                    2,
+                    'POINT'
+                )}">
+                </td>
 
                 <td th:text="${p.ownerName}"></td>
 
-                <td>
+                <td th:text="${p.createdAt != null
+                    ? #temporals.format(
+                        p.createdAt,
+                        'dd/MM/yyyy HH:mm'
+                    )
+                    : ''}">
+                </td>
 
-                    <a
-                        class="btn secondary small"
-                        th:href="@{/products/edit/{id}(id=${p.id})}">
+                <td class="actions">
+
+                    <a class="btn secondary small"
+                       th:href="@{/products/edit/{id}(id=${p.id})}">
                         Sửa
                     </a>
 
-                    <form
-                        th:action="@{/products/delete/{id}(id=${p.id})}"
-                        method="post"
-                        style="display:inline">
+                    <form th:action="@{/products/delete/{id}(id=${p.id})}"
+                          method="post">
 
-                        <button
-                            class="btn danger small">
+                        <input type="hidden"
+                               th:name="${_csrf.parameterName}"
+                               th:value="${_csrf.token}">
+
+                        <button class="btn danger small"
+                                type="submit"
+                                onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này?')">
                             Xóa
                         </button>
 
@@ -93,26 +150,44 @@
 
             </tr>
 
+            <tr th:if="${products.content.isEmpty()}">
+
+                <td colspan="7"
+                    class="empty">
+                    Không có sản phẩm.
+                </td>
+
+            </tr>
+
+            </tbody>
+
         </table>
 
     </div>
 
-    <div class="pagination">
+    <div class="pagination"
+         th:if="${products.totalPages > 1}">
 
         <a th:if="${products.hasPrevious()}"
-           th:href="@{/products(page=${products.number-1},keyword=${keyword})}">
+           th:href="@{/products(
+                page=${products.number - 1},
+                keyword=${keyword}
+           )}">
             Trước
         </a>
 
         <span>
             Trang
-            <span th:text="${products.number+1}"></span>
+            <strong th:text="${products.number + 1}"></strong>
             /
-            <span th:text="${products.totalPages}"></span>
+            <strong th:text="${products.totalPages}"></strong>
         </span>
 
         <a th:if="${products.hasNext()}"
-           th:href="@{/products(page=${products.number+1},keyword=${keyword})}">
+           th:href="@{/products(
+                page=${products.number + 1},
+                keyword=${keyword}
+           )}">
             Sau
         </a>
 

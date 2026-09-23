@@ -14,26 +14,77 @@ public class CloudinaryService {
 
     private final Cloudinary cloudinary;
 
-    public CloudinaryService(Cloudinary cloudinary) {
+    public CloudinaryService(
+            Cloudinary cloudinary
+    ) {
         this.cloudinary = cloudinary;
     }
 
-    public String upload(MultipartFile file)
-            throws IOException {
+    public UploadResult upload(
+            MultipartFile file
+    ) throws IOException {
 
         if (file == null || file.isEmpty()) {
             return null;
         }
 
+        String contentType =
+            file.getContentType();
+
+        if (contentType == null
+                || !contentType.startsWith("image/")) {
+
+            throw new IllegalArgumentException(
+                "Chỉ được upload file hình ảnh."
+            );
+        }
+
         Map<?, ?> result =
-            cloudinary.uploader().upload(
-                file.getBytes(),
+            cloudinary
+                .uploader()
+                .upload(
+                    file.getBytes(),
+                    ObjectUtils.asMap(
+                        "folder",
+                        "spring-security-demo/products",
+                        "resource_type",
+                        "image"
+                    )
+                );
+
+        return new UploadResult(
+            String.valueOf(
+                result.get("secure_url")
+            ),
+            String.valueOf(
+                result.get("public_id")
+            )
+        );
+    }
+
+    public void delete(
+            String publicId
+    ) throws IOException {
+
+        if (publicId == null
+                || publicId.isBlank()) {
+            return;
+        }
+
+        cloudinary
+            .uploader()
+            .destroy(
+                publicId,
                 ObjectUtils.asMap(
-                    "folder",
-                    "spring-security-demo"
+                    "resource_type",
+                    "image"
                 )
             );
+    }
 
-        return result.get("secure_url").toString();
+    public record UploadResult(
+        String url,
+        String publicId
+    ) {
     }
 }

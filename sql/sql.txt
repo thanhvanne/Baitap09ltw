@@ -1,0 +1,741 @@
+USE master;
+GO
+
+IF DB_ID(N'spring_security_demo') IS NOT NULL
+BEGIN
+    ALTER DATABASE spring_security_demo
+    SET SINGLE_USER
+    WITH ROLLBACK IMMEDIATE;
+
+    DROP DATABASE spring_security_demo;
+END
+GO
+
+CREATE DATABASE spring_security_demo;
+GO
+
+USE spring_security_demo;
+GO
+
+
+CREATE TABLE roles
+(
+    id BIGINT IDENTITY(1,1) NOT NULL,
+    name VARCHAR(30) NOT NULL,
+
+    CONSTRAINT PK_roles
+        PRIMARY KEY (id),
+
+    CONSTRAINT UQ_roles_name
+        UNIQUE (name)
+);
+GO
+
+
+CREATE TABLE users
+(
+    id BIGINT IDENTITY(1,1) NOT NULL,
+
+    username VARCHAR(50) NOT NULL,
+
+    email VARCHAR(150) NOT NULL,
+
+    password VARCHAR(150) NOT NULL,
+
+    full_name NVARCHAR(150) NOT NULL,
+
+    images VARCHAR(500) NULL,
+
+    enabled BIT NOT NULL
+        CONSTRAINT DF_users_enabled
+        DEFAULT 1,
+
+    created_at DATETIME2 NOT NULL
+        CONSTRAINT DF_users_created_at
+        DEFAULT SYSDATETIME(),
+
+    role_id BIGINT NOT NULL,
+
+    CONSTRAINT PK_users
+        PRIMARY KEY (id),
+
+    CONSTRAINT UQ_users_username
+        UNIQUE (username),
+
+    CONSTRAINT UQ_users_email
+        UNIQUE (email),
+
+    CONSTRAINT FK_users_roles
+        FOREIGN KEY (role_id)
+        REFERENCES roles(id)
+);
+GO
+
+
+CREATE TABLE products
+(
+    id BIGINT IDENTITY(1,1) NOT NULL,
+
+    name NVARCHAR(200) NOT NULL,
+
+    description NVARCHAR(1000) NULL,
+
+    price DECIMAL(18,2) NOT NULL,
+
+    image VARCHAR(500) NULL,
+
+    image_public_id VARCHAR(500) NULL,
+
+    created_at DATETIME2 NOT NULL
+        CONSTRAINT DF_products_created_at
+        DEFAULT SYSDATETIME(),
+
+    user_id BIGINT NOT NULL,
+
+    CONSTRAINT PK_products
+        PRIMARY KEY (id),
+
+    CONSTRAINT CK_products_price
+        CHECK (price >= 0),
+
+    CONSTRAINT FK_products_users
+        FOREIGN KEY (user_id)
+        REFERENCES users(id)
+        ON DELETE CASCADE
+);
+GO
+
+
+CREATE TABLE otp_tokens
+(
+    id BIGINT IDENTITY(1,1) NOT NULL,
+
+    otp_hash VARCHAR(100) NOT NULL,
+
+    type VARCHAR(30) NOT NULL,
+
+    expires_at DATETIME2 NOT NULL,
+
+    attempts INT NOT NULL
+        CONSTRAINT DF_otp_tokens_attempts
+        DEFAULT 0,
+
+    used BIT NOT NULL
+        CONSTRAINT DF_otp_tokens_used
+        DEFAULT 0,
+
+    created_at DATETIME2 NOT NULL
+        CONSTRAINT DF_otp_tokens_created_at
+        DEFAULT SYSDATETIME(),
+
+    user_id BIGINT NOT NULL,
+
+    CONSTRAINT PK_otp_tokens
+        PRIMARY KEY (id),
+
+    CONSTRAINT CK_otp_tokens_attempts
+        CHECK (attempts >= 0),
+
+    CONSTRAINT FK_otp_tokens_users
+        FOREIGN KEY (user_id)
+        REFERENCES users(id)
+        ON DELETE CASCADE
+);
+GO
+
+
+CREATE INDEX IX_users_full_name
+ON users(full_name);
+GO
+
+CREATE INDEX IX_users_role_id
+ON users(role_id);
+GO
+
+CREATE INDEX IX_products_name
+ON products(name);
+GO
+
+CREATE INDEX IX_products_user_id
+ON products(user_id);
+GO
+
+CREATE INDEX IX_products_created_at
+ON products(created_at);
+GO
+
+CREATE INDEX IX_otp_user_type
+ON otp_tokens(user_id, type);
+GO
+
+CREATE INDEX IX_otp_created_at
+ON otp_tokens(created_at DESC);
+GO
+
+
+INSERT INTO roles(name)
+VALUES
+    ('USER'),
+    ('ADMIN');
+GO
+
+
+DECLARE @USER_ROLE BIGINT;
+DECLARE @ADMIN_ROLE BIGINT;
+
+SELECT @USER_ROLE = id
+FROM roles
+WHERE name = 'USER';
+
+SELECT @ADMIN_ROLE = id
+FROM roles
+WHERE name = 'ADMIN';
+
+DECLARE @PASSWORD VARCHAR(150);
+
+SET @PASSWORD =
+'$2a$10$9RzQpD4Y25AXowKIX2UDH.oE7lOAFOLYIQ96TMXtYH0WMs7xX1sbC';
+
+
+INSERT INTO users
+(
+    username,
+    email,
+    password,
+    full_name,
+    images,
+    enabled,
+    created_at,
+    role_id
+)
+VALUES
+(
+    'admin',
+    'admin@iotstar.vn',
+    @PASSWORD,
+    N'Nguyễn Minh Quân',
+    'https://ui-avatars.com/api/?name=Nguyen+Minh+Quan&background=172554&color=fff&size=256',
+    1,
+    '2025-01-05T08:15:00',
+    @ADMIN_ROLE
+),
+(
+    'manager',
+    'manager@iotstar.vn',
+    @PASSWORD,
+    N'Trần Thanh Tùng',
+    'https://ui-avatars.com/api/?name=Tran+Thanh+Tung&background=1e40af&color=fff&size=256',
+    1,
+    '2025-02-10T09:20:00',
+    @ADMIN_ROLE
+),
+(
+    'nguyenvanan',
+    'an.nguyen@gmail.com',
+    @PASSWORD,
+    N'Nguyễn Văn An',
+    'https://ui-avatars.com/api/?name=Nguyen+Van+An&background=2563eb&color=fff&size=256',
+    1,
+    '2025-03-01T10:30:00',
+    @USER_ROLE
+),
+(
+    'tranminhanh',
+    'minhanh.tran@gmail.com',
+    @PASSWORD,
+    N'Trần Minh Anh',
+    'https://ui-avatars.com/api/?name=Tran+Minh+Anh&background=7c3aed&color=fff&size=256',
+    1,
+    '2025-03-15T13:25:00',
+    @USER_ROLE
+),
+(
+    'lehoangnam',
+    'nam.le@gmail.com',
+    @PASSWORD,
+    N'Lê Hoàng Nam',
+    'https://ui-avatars.com/api/?name=Le+Hoang+Nam&background=059669&color=fff&size=256',
+    1,
+    '2025-04-02T16:40:00',
+    @USER_ROLE
+),
+(
+    'phamthuha',
+    'thuha.pham@gmail.com',
+    @PASSWORD,
+    N'Phạm Thu Hà',
+    'https://ui-avatars.com/api/?name=Pham+Thu+Ha&background=db2777&color=fff&size=256',
+    1,
+    '2025-04-18T07:50:00',
+    @USER_ROLE
+),
+(
+    'voquanghuy',
+    'quanghuy.vo@gmail.com',
+    @PASSWORD,
+    N'Võ Quang Huy',
+    'https://ui-avatars.com/api/?name=Vo+Quang+Huy&background=ea580c&color=fff&size=256',
+    1,
+    '2025-05-03T11:10:00',
+    @USER_ROLE
+),
+(
+    'buidieulinh',
+    'dieulinh.bui@gmail.com',
+    @PASSWORD,
+    N'Bùi Diệu Linh',
+    'https://ui-avatars.com/api/?name=Bui+Dieu+Linh&background=be185d&color=fff&size=256',
+    1,
+    '2025-05-21T14:45:00',
+    @USER_ROLE
+),
+(
+    'dangquocbao',
+    'quocbao.dang@gmail.com',
+    @PASSWORD,
+    N'Đặng Quốc Bảo',
+    'https://ui-avatars.com/api/?name=Dang+Quoc+Bao&background=0369a1&color=fff&size=256',
+    1,
+    '2025-06-08T09:35:00',
+    @USER_ROLE
+),
+(
+    'ngocmai',
+    'ngocmai@gmail.com',
+    @PASSWORD,
+    N'Hoàng Ngọc Mai',
+    'https://ui-avatars.com/api/?name=Hoang+Ngoc+Mai&background=9333ea&color=fff&size=256',
+    1,
+    '2025-06-25T15:15:00',
+    @USER_ROLE
+),
+(
+    'phuctran',
+    'phuc.tran@gmail.com',
+    @PASSWORD,
+    N'Trần Gia Phúc',
+    'https://ui-avatars.com/api/?name=Tran+Gia+Phuc&background=0f766e&color=fff&size=256',
+    1,
+    '2025-07-11T08:05:00',
+    @USER_ROLE
+),
+(
+    'lockeduser',
+    'locked@iotstar.vn',
+    @PASSWORD,
+    N'Tài Khoản Đã Khóa',
+    NULL,
+    0,
+    '2025-08-01T12:00:00',
+    @USER_ROLE
+);
+GO
+
+
+DECLARE @AN BIGINT =
+(
+    SELECT id
+    FROM users
+    WHERE username = 'nguyenvanan'
+);
+
+DECLARE @MINH_ANH BIGINT =
+(
+    SELECT id
+    FROM users
+    WHERE username = 'tranminhanh'
+);
+
+DECLARE @NAM BIGINT =
+(
+    SELECT id
+    FROM users
+    WHERE username = 'lehoangnam'
+);
+
+DECLARE @HA BIGINT =
+(
+    SELECT id
+    FROM users
+    WHERE username = 'phamthuha'
+);
+
+DECLARE @HUY BIGINT =
+(
+    SELECT id
+    FROM users
+    WHERE username = 'voquanghuy'
+);
+
+DECLARE @LINH BIGINT =
+(
+    SELECT id
+    FROM users
+    WHERE username = 'buidieulinh'
+);
+
+DECLARE @BAO BIGINT =
+(
+    SELECT id
+    FROM users
+    WHERE username = 'dangquocbao'
+);
+
+DECLARE @MAI BIGINT =
+(
+    SELECT id
+    FROM users
+    WHERE username = 'ngocmai'
+);
+
+DECLARE @PHUC BIGINT =
+(
+    SELECT id
+    FROM users
+    WHERE username = 'phuctran'
+);
+
+
+INSERT INTO products
+(
+    name,
+    description,
+    price,
+    image,
+    image_public_id,
+    created_at,
+    user_id
+)
+VALUES
+(
+    N'iPhone 15 Pro Max 256GB',
+    N'Điện thoại Apple màn hình Super Retina XDR OLED, khung titanium, bộ nhớ 256GB.',
+    29990000.00,
+    'https://placehold.co/600x400/111827/FFFFFF?text=iPhone+15+Pro+Max',
+    NULL,
+    '2025-08-01T09:00:00',
+    @AN
+),
+(
+    N'MacBook Air M3 13 inch',
+    N'Laptop Apple chip M3, RAM 16GB, SSD 512GB, thiết kế mỏng nhẹ.',
+    27990000.00,
+    'https://placehold.co/600x400/334155/FFFFFF?text=MacBook+Air+M3',
+    NULL,
+    '2025-08-03T10:30:00',
+    @AN
+),
+(
+    N'AirPods Pro 2 USB-C',
+    N'Tai nghe không dây có chống ồn chủ động và Adaptive Audio.',
+    5490000.00,
+    'https://placehold.co/600x400/E2E8F0/172033?text=AirPods+Pro+2',
+    NULL,
+    '2025-08-05T14:10:00',
+    @AN
+),
+(
+    N'iPad Air M2 11 inch',
+    N'Máy tính bảng Apple chip M2 phù hợp học tập, làm việc và giải trí.',
+    16990000.00,
+    'https://placehold.co/600x400/64748B/FFFFFF?text=iPad+Air+M2',
+    NULL,
+    '2025-08-08T16:45:00',
+    @AN
+),
+(
+    N'Samsung Galaxy S24 Ultra 5G',
+    N'Điện thoại Samsung flagship, camera độ phân giải cao, tích hợp S Pen.',
+    26990000.00,
+    'https://placehold.co/600x400/1E293B/FFFFFF?text=Galaxy+S24+Ultra',
+    NULL,
+    '2025-08-10T08:20:00',
+    @MINH_ANH
+),
+(
+    N'Samsung Galaxy Tab S9',
+    N'Máy tính bảng Android màn hình Dynamic AMOLED 2X.',
+    15990000.00,
+    'https://placehold.co/600x400/0F766E/FFFFFF?text=Galaxy+Tab+S9',
+    NULL,
+    '2025-08-11T13:05:00',
+    @MINH_ANH
+),
+(
+    N'Samsung Galaxy Watch6',
+    N'Đồng hồ thông minh theo dõi vận động, giấc ngủ và nhịp tim.',
+    5490000.00,
+    'https://placehold.co/600x400/075985/FFFFFF?text=Galaxy+Watch6',
+    NULL,
+    '2025-08-12T18:30:00',
+    @MINH_ANH
+),
+(
+    N'Sony WH-1000XM5',
+    N'Tai nghe Bluetooth chống ồn chủ động cao cấp.',
+    7490000.00,
+    'https://placehold.co/600x400/18181B/FFFFFF?text=Sony+WH-1000XM5',
+    NULL,
+    '2025-08-15T11:25:00',
+    @NAM
+),
+(
+    N'Sony WF-1000XM5',
+    N'Tai nghe true wireless nhỏ gọn với khả năng chống ồn.',
+    5990000.00,
+    'https://placehold.co/600x400/27272A/FFFFFF?text=Sony+WF-1000XM5',
+    NULL,
+    '2025-08-16T15:40:00',
+    @NAM
+),
+(
+    N'Dell XPS 13 Plus',
+    N'Laptop văn phòng cao cấp màn hình 13 inch, thiết kế nhỏ gọn.',
+    31990000.00,
+    'https://placehold.co/600x400/475569/FFFFFF?text=Dell+XPS+13',
+    NULL,
+    '2025-08-18T09:15:00',
+    @NAM
+),
+(
+    N'Logitech MX Master 3S',
+    N'Chuột không dây công thái học dành cho lập trình viên và designer.',
+    2490000.00,
+    'https://placehold.co/600x400/2563EB/FFFFFF?text=MX+Master+3S',
+    NULL,
+    '2025-08-20T10:10:00',
+    @HA
+),
+(
+    N'Logitech MX Keys S',
+    N'Bàn phím không dây full-size hỗ trợ nhiều thiết bị.',
+    2690000.00,
+    'https://placehold.co/600x400/1D4ED8/FFFFFF?text=MX+Keys+S',
+    NULL,
+    '2025-08-21T14:00:00',
+    @HA
+),
+(
+    N'Keychron K8 Pro',
+    N'Bàn phím cơ không dây hot-swap hỗ trợ Windows và macOS.',
+    2790000.00,
+    'https://placehold.co/600x400/7C2D12/FFFFFF?text=Keychron+K8+Pro',
+    NULL,
+    '2025-08-22T17:35:00',
+    @HA
+),
+(
+    N'ASUS ROG Zephyrus G14',
+    N'Laptop gaming màn hình 14 inch, hiệu năng mạnh trong thiết kế nhỏ gọn.',
+    38990000.00,
+    'https://placehold.co/600x400/7F1D1D/FFFFFF?text=ROG+Zephyrus+G14',
+    NULL,
+    '2025-08-24T08:45:00',
+    @HUY
+),
+(
+    N'ASUS TUF Gaming A15',
+    N'Laptop gaming sử dụng CPU Ryzen và GPU NVIDIA GeForce.',
+    23990000.00,
+    'https://placehold.co/600x400/991B1B/FFFFFF?text=ASUS+TUF+A15',
+    NULL,
+    '2025-08-25T11:30:00',
+    @HUY
+),
+(
+    N'LG UltraGear 27GR75Q',
+    N'Màn hình gaming 27 inch QHD với tần số quét cao.',
+    6990000.00,
+    'https://placehold.co/600x400/B91C1C/FFFFFF?text=LG+UltraGear',
+    NULL,
+    '2025-08-27T09:25:00',
+    @HUY
+),
+(
+    N'Xiaomi 14 5G',
+    N'Điện thoại flagship Xiaomi với hệ thống camera Leica.',
+    18990000.00,
+    'https://placehold.co/600x400/F97316/FFFFFF?text=Xiaomi+14',
+    NULL,
+    '2025-08-29T13:20:00',
+    @LINH
+),
+(
+    N'Redmi Note 13 Pro',
+    N'Điện thoại tầm trung với màn hình AMOLED và camera độ phân giải cao.',
+    8990000.00,
+    'https://placehold.co/600x400/EA580C/FFFFFF?text=Redmi+Note+13+Pro',
+    NULL,
+    '2025-08-30T16:50:00',
+    @LINH
+),
+(
+    N'Xiaomi Smart Band 8',
+    N'Vòng đeo tay thông minh theo dõi vận động và sức khỏe.',
+    1090000.00,
+    'https://placehold.co/600x400/C2410C/FFFFFF?text=Smart+Band+8',
+    NULL,
+    '2025-09-01T08:00:00',
+    @LINH
+),
+(
+    N'Kindle Paperwhite 11th',
+    N'Máy đọc sách màn hình chống chói, chống nước và thời lượng pin dài.',
+    3790000.00,
+    'https://placehold.co/600x400/78716C/FFFFFF?text=Kindle+Paperwhite',
+    NULL,
+    '2025-09-03T12:15:00',
+    @BAO
+),
+(
+    N'Anker 737 Power Bank',
+    N'Pin dự phòng dung lượng lớn hỗ trợ sạc nhanh công suất cao.',
+    2990000.00,
+    'https://placehold.co/600x400/0369A1/FFFFFF?text=Anker+737',
+    NULL,
+    '2025-09-05T15:30:00',
+    @BAO
+),
+(
+    N'Anker Soundcore Liberty 4',
+    N'Tai nghe true wireless hỗ trợ chống ồn và âm thanh không gian.',
+    2690000.00,
+    'https://placehold.co/600x400/0284C7/FFFFFF?text=Soundcore+Liberty+4',
+    NULL,
+    '2025-09-07T10:40:00',
+    @BAO
+),
+(
+    N'Raspberry Pi 5 8GB',
+    N'Máy tính nhúng dùng cho học IoT, Linux, server và lập trình.',
+    2490000.00,
+    'https://placehold.co/600x400/A21CAF/FFFFFF?text=Raspberry+Pi+5',
+    NULL,
+    '2025-09-09T09:10:00',
+    @MAI
+),
+(
+    N'Arduino Uno R4 WiFi',
+    N'Board phát triển Arduino có WiFi phù hợp cho các dự án IoT.',
+    790000.00,
+    'https://placehold.co/600x400/0D9488/FFFFFF?text=Arduino+Uno+R4',
+    NULL,
+    '2025-09-10T14:25:00',
+    @MAI
+),
+(
+    N'ESP32 Development Board',
+    N'Board vi điều khiển WiFi và Bluetooth dành cho các dự án nhúng.',
+    185000.00,
+    'https://placehold.co/600x400/115E59/FFFFFF?text=ESP32',
+    NULL,
+    '2025-09-11T16:35:00',
+    @MAI
+),
+(
+    N'Canon EOS R50',
+    N'Máy ảnh mirrorless nhỏ gọn phù hợp quay video và chụp ảnh.',
+    17990000.00,
+    'https://placehold.co/600x400/991B1B/FFFFFF?text=Canon+EOS+R50',
+    NULL,
+    '2025-09-13T11:00:00',
+    @PHUC
+),
+(
+    N'DJI Osmo Pocket 3',
+    N'Camera cầm tay có gimbal phục vụ vlog và quay video du lịch.',
+    13990000.00,
+    'https://placehold.co/600x400/334155/FFFFFF?text=DJI+Osmo+Pocket+3',
+    NULL,
+    '2025-09-15T13:45:00',
+    @PHUC
+),
+(
+    N'GoPro HERO12 Black',
+    N'Camera hành động chống nước hỗ trợ quay video độ phân giải cao.',
+    9990000.00,
+    'https://placehold.co/600x400/1E3A8A/FFFFFF?text=GoPro+HERO12',
+    NULL,
+    '2025-09-17T17:20:00',
+    @PHUC
+);
+GO
+
+
+SELECT
+    r.id,
+    r.name
+FROM roles r
+ORDER BY r.id;
+GO
+
+
+SELECT
+    u.id,
+    u.username,
+    u.email,
+    u.full_name,
+    u.enabled,
+    u.created_at,
+    r.name AS role_name,
+    COUNT(p.id) AS product_count
+FROM users u
+INNER JOIN roles r
+    ON r.id = u.role_id
+LEFT JOIN products p
+    ON p.user_id = u.id
+GROUP BY
+    u.id,
+    u.username,
+    u.email,
+    u.full_name,
+    u.enabled,
+    u.created_at,
+    r.name
+ORDER BY u.id;
+GO
+
+
+SELECT
+    p.id,
+    p.name,
+    p.description,
+    p.price,
+    p.image,
+    p.image_public_id,
+    p.created_at,
+    u.username AS owner_username,
+    u.full_name AS owner_name
+FROM products p
+INNER JOIN users u
+    ON u.id = p.user_id
+ORDER BY p.id DESC;
+GO
+
+
+SELECT
+    COUNT(*) AS total_users
+FROM users;
+GO
+
+
+SELECT
+    COUNT(*) AS total_products
+FROM products;
+GO
+
+
+SELECT
+    u.username,
+    u.full_name,
+    COUNT(p.id) AS product_count
+FROM users u
+LEFT JOIN products p
+    ON p.user_id = u.id
+GROUP BY
+    u.username,
+    u.full_name
+ORDER BY
+    product_count DESC,
+    u.username;
+GO

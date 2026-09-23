@@ -6,7 +6,19 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "products")
+@Table(
+    name = "products",
+    indexes = {
+        @Index(
+            name = "idx_products_name",
+            columnList = "name"
+        ),
+        @Index(
+            name = "idx_products_user_id",
+            columnList = "user_id"
+        )
+    }
+)
 public class Product {
 
     @Id
@@ -26,17 +38,34 @@ public class Product {
     )
     private String description;
 
-    @Column(nullable = false, precision = 18, scale = 2)
+    @Column(
+        nullable = false,
+        precision = 18,
+        scale = 2
+    )
     private BigDecimal price;
 
     @Column(length = 500)
     private String image;
 
-    @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    @Column(
+        name = "image_public_id",
+        length = 500
+    )
+    private String imagePublicId;
+
+    @Column(
+        name = "created_at",
+        nullable = false
+    )
+    private LocalDateTime createdAt =
+        LocalDateTime.now();
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(
+        name = "user_id",
+        nullable = false
+    )
     private User user;
 
     public Product() {
@@ -62,7 +91,9 @@ public class Product {
         return description;
     }
 
-    public void setDescription(String description) {
+    public void setDescription(
+            String description
+    ) {
         this.description = description;
     }
 
@@ -82,11 +113,23 @@ public class Product {
         this.image = image;
     }
 
+    public String getImagePublicId() {
+        return imagePublicId;
+    }
+
+    public void setImagePublicId(
+            String imagePublicId
+    ) {
+        this.imagePublicId = imagePublicId;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
+    public void setCreatedAt(
+            LocalDateTime createdAt
+    ) {
         this.createdAt = createdAt;
     }
 

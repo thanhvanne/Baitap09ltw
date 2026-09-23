@@ -1,5 +1,8 @@
 package vn.iotstar.controller;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+
 import jakarta.validation.Valid;
 
 import org.springframework.stereotype.Controller;
@@ -7,7 +10,8 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
-import vn.iotstar.dto.*;
+import vn.iotstar.dto.RegisterDTO;
+import vn.iotstar.dto.ResetPasswordDTO;
 import vn.iotstar.service.AuthService;
 
 @Controller
@@ -15,7 +19,9 @@ public class AuthController {
 
     private final AuthService auth;
 
-    public AuthController(AuthService auth) {
+    public AuthController(
+            AuthService auth
+    ) {
         this.auth = auth;
     }
 
@@ -25,7 +31,9 @@ public class AuthController {
     }
 
     @GetMapping("/register")
-    public String register(Model model) {
+    public String register(
+            Model model
+    ) {
 
         model.addAttribute(
             "registerDTO",
@@ -37,7 +45,10 @@ public class AuthController {
 
     @PostMapping("/register")
     public String register(
-            @Valid @ModelAttribute RegisterDTO dto,
+            @Valid
+            @ModelAttribute("registerDTO")
+            RegisterDTO dto,
+
             BindingResult result,
             Model model
     ) {
@@ -51,9 +62,10 @@ public class AuthController {
             auth.register(dto);
 
             return "redirect:/verify-otp?email="
-                + dto.getEmail();
+                + encode(dto.getEmail());
 
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException
+                 | IllegalStateException e) {
 
             model.addAttribute(
                 "error",
@@ -66,32 +78,51 @@ public class AuthController {
 
     @GetMapping("/verify-otp")
     public String verifyOtp(
-            @RequestParam String email,
+            @RequestParam
+            String email,
+
             Model model
     ) {
 
-        model.addAttribute("email", email);
+        model.addAttribute(
+            "email",
+            email
+        );
 
         return "auth/verify-otp";
     }
 
     @PostMapping("/verify-otp")
     public String verifyOtp(
-            @RequestParam String email,
-            @RequestParam String otp,
+            @RequestParam
+            String email,
+
+            @RequestParam
+            String otp,
+
             Model model
     ) {
 
         try {
 
-            auth.verifyRegister(email, otp);
+            auth.verifyRegister(
+                email,
+                otp
+            );
 
             return "redirect:/login?verified=true";
 
         } catch (IllegalArgumentException e) {
 
-            model.addAttribute("email", email);
-            model.addAttribute("error", e.getMessage());
+            model.addAttribute(
+                "email",
+                email
+            );
+
+            model.addAttribute(
+                "error",
+                e.getMessage()
+            );
 
             return "auth/verify-otp";
         }
@@ -99,13 +130,36 @@ public class AuthController {
 
     @PostMapping("/register/resend-otp")
     public String resend(
-            @RequestParam String email
+            @RequestParam
+            String email,
+
+            Model model
     ) {
 
-        auth.resendRegisterOtp(email);
+        try {
 
-        return "redirect:/verify-otp?email="
-            + email;
+            auth.resendRegisterOtp(
+                email
+            );
+
+            return "redirect:/verify-otp?email="
+                + encode(email)
+                + "&resent=true";
+
+        } catch (IllegalArgumentException e) {
+
+            model.addAttribute(
+                "email",
+                email
+            );
+
+            model.addAttribute(
+                "error",
+                e.getMessage()
+            );
+
+            return "auth/verify-otp";
+        }
     }
 
     @GetMapping("/forgot-password")
@@ -115,7 +169,9 @@ public class AuthController {
 
     @PostMapping("/forgot-password")
     public String forgot(
-            @RequestParam String email,
+            @RequestParam
+            String email,
+
             Model model
     ) {
 
@@ -124,7 +180,7 @@ public class AuthController {
             auth.forgotPassword(email);
 
             return "redirect:/reset-password?email="
-                + email;
+                + encode(email);
 
         } catch (IllegalArgumentException e) {
 
@@ -139,7 +195,9 @@ public class AuthController {
 
     @GetMapping("/reset-password")
     public String reset(
-            @RequestParam String email,
+            @RequestParam
+            String email,
+
             Model model
     ) {
 
@@ -158,9 +216,29 @@ public class AuthController {
 
     @PostMapping("/reset-password")
     public String reset(
-            @ModelAttribute ResetPasswordDTO dto,
+            @Valid
+            @ModelAttribute("resetDTO")
+            ResetPasswordDTO dto,
+
+            BindingResult result,
             Model model
     ) {
+
+        if (!dto.getPassword()
+                .equals(
+                    dto.getConfirmPassword()
+                )) {
+
+            result.rejectValue(
+                "confirmPassword",
+                "password.mismatch",
+                "Xác nhận mật khẩu không khớp."
+            );
+        }
+
+        if (result.hasErrors()) {
+            return "auth/reset-password";
+        }
 
         try {
 
@@ -177,5 +255,15 @@ public class AuthController {
 
             return "auth/reset-password";
         }
+    }
+
+    private String encode(
+            String value
+    ) {
+
+        return URLEncoder.encode(
+            value,
+            StandardCharsets.UTF_8
+        );
     }
 }

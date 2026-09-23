@@ -2,23 +2,20 @@ package vn.iotstar.controller;
 
 import java.io.IOException;
 
+import jakarta.validation.Valid;
+
 import org.springframework.data.domain.Page;
-
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import vn.iotstar.dto.ProductDTO;
-
 import vn.iotstar.repository.UserRepository;
-
 import vn.iotstar.security.CustomUserDetails;
-
 import vn.iotstar.service.ProductService;
 
 @Controller
@@ -26,26 +23,18 @@ import vn.iotstar.service.ProductService;
 public class ProductController {
 
     private final ProductService productService;
-
     private final UserRepository userRepository;
-
 
     public ProductController(
             ProductService productService,
             UserRepository userRepository
     ) {
-
         this.productService =
-                productService;
+            productService;
 
         this.userRepository =
-                userRepository;
+            userRepository;
     }
-
-
-    /* =====================================================
-       LIST
-       ===================================================== */
 
     @GetMapping
     public String list(
@@ -66,13 +55,12 @@ public class ProductController {
     ) {
 
         Page<ProductDTO> products =
-                productService.findAll(
-                    keyword,
-                    page,
-                    5,
-                    principal
-                );
-
+            productService.findAll(
+                keyword,
+                page,
+                5,
+                principal
+            );
 
         model.addAttribute(
             "products",
@@ -84,14 +72,8 @@ public class ProductController {
             keyword
         );
 
-
         return "products/list";
     }
-
-
-    /* =====================================================
-       CREATE FORM
-       ===================================================== */
 
     @GetMapping("/new")
     public String createForm(
@@ -106,28 +88,13 @@ public class ProductController {
             new ProductDTO()
         );
 
-
-        /*
-         * Chỉ ADMIN cần danh sách User
-         * để chọn owner.
-         */
-
-        if (isAdmin(principal)) {
-
-            model.addAttribute(
-                "users",
-                userRepository.findAll()
-            );
-        }
-
+        prepareUsers(
+            principal,
+            model
+        );
 
         return "products/form";
     }
-
-
-    /* =====================================================
-       EDIT FORM
-       ===================================================== */
 
     @GetMapping("/edit/{id}")
     public String editForm(
@@ -139,40 +106,29 @@ public class ProductController {
             Model model
     ) {
 
-        ProductDTO product =
-                productService.findById(
-                    id,
-                    principal
-                );
-
-
         model.addAttribute(
             "product",
-            product
+            productService.findById(
+                id,
+                principal
+            )
         );
 
-
-        if (isAdmin(principal)) {
-
-            model.addAttribute(
-                "users",
-                userRepository.findAll()
-            );
-        }
-
+        prepareUsers(
+            principal,
+            model
+        );
 
         return "products/form";
     }
 
-
-    /* =====================================================
-       SAVE CREATE / UPDATE
-       ===================================================== */
-
     @PostMapping("/save")
     public String save(
+            @Valid
             @ModelAttribute("product")
             ProductDTO dto,
+
+            BindingResult result,
 
             @RequestParam(
                 name = "file",
@@ -181,51 +137,77 @@ public class ProductController {
             MultipartFile file,
 
             @AuthenticationPrincipal
-            CustomUserDetails principal
+            CustomUserDetails principal,
+
+            Model model,
+            RedirectAttributes redirect
     ) throws IOException {
 
+        if (result.hasErrors()) {
 
-        /*
-         * ID null => CREATE
-         */
-        if (dto.getId() == null) {
-
-            productService.create(
-                dto,
-                file,
-                principal
+            prepareUsers(
+                principal,
+                model
             );
 
+            return "products/form";
         }
 
+        try {
 
-        /*
-         * Có ID => UPDATE
-         */
-        else {
+            if (dto.getId() == null) {
 
-            productService.update(
-                dto,
-                file,
-                principal
+                productService.create(
+                    dto,
+                    file,
+                    principal
+                );
+
+                redirect.addFlashAttribute(
+                    "success",
+                    "Thêm sản phẩm thành công."
+                );
+
+            } else {
+
+                productService.update(
+                    dto,
+                    file,
+                    principal
+                );
+
+                redirect.addFlashAttribute(
+                    "success",
+                    "Cập nhật sản phẩm thành công."
+                );
+            }
+
+            return "redirect:/products";
+
+        } catch (IllegalArgumentException e) {
+
+            model.addAttribute(
+                "error",
+                e.getMessage()
             );
+
+            prepareUsers(
+                principal,
+                model
+            );
+
+            return "products/form";
         }
-
-
-        return "redirect:/products";
     }
-
-
-    /* =====================================================
-       DELETE
-       ===================================================== */
 
     @PostMapping("/delete/{id}")
     public String delete(
             @PathVariable Long id,
 
             @AuthenticationPrincipal
-            CustomUserDetails principal
+            CustomUserDetails principal,
+
+            RedirectAttributes redirect
     ) {
 
         productService.delete(
@@ -233,27 +215,39 @@ public class ProductController {
             principal
         );
 
+        redirect.addFlashAttribute(
+            "success",
+            "Xóa sản phẩm thành công."
+        );
 
         return "redirect:/products";
     }
 
+    private void prepareUsers(
+            CustomUserDetails principal,
+            Model model
+    ) {
 
-    /* =====================================================
-       HELPER
-       ===================================================== */
+        if (isAdmin(principal)) {
+
+            model.addAttribute(
+                "users",
+                userRepository.findAll()
+            );
+        }
+    }
 
     private boolean isAdmin(
             CustomUserDetails principal
     ) {
 
         return principal
-                .getAuthorities()
-                .stream()
-                .anyMatch(
-                    authority ->
-                        "ROLE_ADMIN".equals(
-                            authority.getAuthority()
-                        )
-                );
+            .getAuthorities()
+            .stream()
+            .anyMatch(authority ->
+                "ROLE_ADMIN".equals(
+                    authority.getAuthority()
+                )
+            );
     }
 }

@@ -9,13 +9,17 @@ body {
     color: #172033;
 }
 
+a {
+    color: #2563eb;
+}
+
 .topbar {
-    min-height: 64px;
+    min-height: 68px;
     background: #172554;
     color: #fff;
     display: flex;
     align-items: center;
-    padding: 0 28px;
+    padding: 8px 28px;
     gap: 25px;
 }
 
@@ -24,10 +28,12 @@ body {
     text-decoration: none;
     font-weight: 800;
     font-size: 20px;
+    white-space: nowrap;
 }
 
 .topbar nav {
     display: flex;
+    align-items: center;
     gap: 18px;
     flex: 1;
 }
@@ -40,19 +46,36 @@ body {
 .account {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
+}
+
+.account-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.account-info strong,
+.account-info small {
+    white-space: nowrap;
+}
+
+.account-info small {
+    color: #bfdbfe;
+    margin-top: 2px;
 }
 
 .account form {
     display: inline;
+    margin: 0;
 }
 
 .avatar {
-    width: 40px;
-    height: 40px;
+    width: 42px;
+    height: 42px;
     border-radius: 50%;
     object-fit: cover;
-    background: white;
+    background: #fff;
 }
 
 .link-button {
@@ -60,16 +83,18 @@ body {
     border: 0;
     color: #fff;
     cursor: pointer;
+    font-weight: 600;
 }
 
 .container {
     max-width: 1200px;
     margin: 30px auto;
     padding: 0 20px;
+    min-height: calc(100vh - 170px);
 }
 
 .narrow {
-    max-width: 700px;
+    max-width: 760px;
 }
 
 .panel,
@@ -82,7 +107,7 @@ body {
 
 .cards {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(2, minmax(200px, 1fr));
     gap: 18px;
 }
 
@@ -101,6 +126,11 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 18px;
+}
+
+.page-title p {
+    color: #64748b;
 }
 
 .btn {
@@ -137,6 +167,10 @@ body {
     width: 100%;
 }
 
+.mt {
+    margin-top: 12px;
+}
+
 .search {
     display: flex;
     gap: 10px;
@@ -158,10 +192,15 @@ body {
     border-radius: 8px;
 }
 
+.form-grid textarea {
+    resize: vertical;
+}
+
 .table-wrap {
     overflow: auto;
     background: #fff;
     border-radius: 12px;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, .04);
 }
 
 .table-wrap table {
@@ -174,6 +213,12 @@ body {
     padding: 12px;
     border-bottom: 1px solid #e2e8f0;
     text-align: left;
+    vertical-align: middle;
+}
+
+.table-wrap th {
+    background: #f8fafc;
+    color: #475569;
 }
 
 .thumb {
@@ -183,6 +228,13 @@ body {
     border-radius: 8px;
 }
 
+.preview {
+    max-width: 220px;
+    max-height: 220px;
+    object-fit: cover;
+    border-radius: 10px;
+}
+
 .form-grid {
     display: grid;
     grid-template-columns: 150px 1fr;
@@ -190,8 +242,30 @@ body {
     align-items: center;
 }
 
-.form-grid div {
+.form-grid > div {
     grid-column: 2;
+}
+
+.checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.checkbox-row input {
+    width: auto;
+    margin: 0;
+}
+
+.actions {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    white-space: nowrap;
+}
+
+.actions form {
+    margin: 0;
 }
 
 .alert {
@@ -210,17 +284,57 @@ body {
     color: #166534;
 }
 
+.field-error {
+    display: block;
+    color: #b91c1c;
+    margin-top: 5px;
+}
+
+.note {
+    padding: 12px;
+    margin: 12px 0 20px;
+    border-radius: 8px;
+    background: #fff7ed;
+    color: #9a3412;
+}
+
+.status {
+    font-weight: 600;
+}
+
+.status.active {
+    color: #15803d;
+}
+
+.status.inactive {
+    color: #b91c1c;
+}
+
+.empty {
+    text-align: center !important;
+    color: #64748b;
+}
+
 .pagination {
     display: flex;
+    align-items: center;
     gap: 15px;
     justify-content: center;
     margin: 22px;
+}
+
+.pagination a {
+    background: #fff;
+    padding: 8px 12px;
+    border-radius: 7px;
+    text-decoration: none;
 }
 
 .auth-page {
     min-height: 100vh;
     display: grid;
     place-items: center;
+    padding: 30px;
     background: linear-gradient(135deg, #eff6ff, #eef2ff);
 }
 
@@ -248,22 +362,39 @@ body {
     color: #64748b;
 }
 
+@media (max-width: 900px) {
+
+    .topbar {
+        flex-wrap: wrap;
+    }
+
+    .topbar nav {
+        order: 3;
+        flex-basis: 100%;
+    }
+
+    .account-info small {
+        display: none;
+    }
+}
+
 @media (max-width: 800px) {
 
     .cards {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1fr;
     }
 
-    .topbar {
-        padding: 10px 12px;
-        flex-wrap: wrap;
+    .page-title,
+    .search {
+        flex-direction: column;
+        align-items: stretch;
     }
 
     .form-grid {
         grid-template-columns: 1fr;
     }
 
-    .form-grid div {
+    .form-grid > div {
         grid-column: 1;
     }
 }

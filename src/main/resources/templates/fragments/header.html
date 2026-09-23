@@ -9,11 +9,9 @@
         class="topbar">
 
     <div class="brand">
-
         <a th:href="@{/}">
             IOTSTAR SHOP
         </a>
-
     </div>
 
     <nav>
@@ -22,7 +20,8 @@
             Home
         </a>
 
-        <a th:href="@{/products}">
+        <a th:href="@{/products}"
+           th:if="${#authorization.expression('isAuthenticated()')}">
             Products
         </a>
 
@@ -41,38 +40,49 @@
     <div class="account"
          th:if="${#authorization.expression('isAuthenticated()')}">
 
-        <img
-            class="avatar"
-            th:src="${#authentication.principal.images != null
+        <img class="avatar"
+             th:src="${#authentication.principal.images != null
                  and !#strings.isEmpty(#authentication.principal.images)
                  ? #authentication.principal.images
                  : '/images/avatar-default.svg'}"
-            alt="Avatar">
+             alt="Avatar">
 
-        <span
-            th:text="${#authentication.principal.fullName}">
-            User
-        </span>
+        <div class="account-info">
 
-        <span
-            th:text="'(' + ${#authentication.principal.username} + ')'">
-        </span>
+            <strong th:text="${#authentication.principal.fullName}">
+                User
+            </strong>
 
-        <form
-            th:action="@{/logout}"
-            method="post">
+            <small>
+                <span th:text="${#authentication.principal.username}">
+                    username
+                </span>
 
-            <input
-                type="hidden"
-                th:name="${_csrf.parameterName}"
-                th:value="${_csrf.token}">
+                ·
 
-            <button
-                class="link-button"
-                type="submit">
+                <span th:text="${#authentication.principal.email}">
+                    email
+                </span>
 
+                ·
+
+                <span th:text="${#authentication.principal.role}">
+                    role
+                </span>
+            </small>
+
+        </div>
+
+        <form th:action="@{/logout}"
+              method="post">
+
+            <input type="hidden"
+                   th:name="${_csrf.parameterName}"
+                   th:value="${_csrf.token}">
+
+            <button class="link-button"
+                    type="submit">
                 Đăng xuất
-
             </button>
 
         </form>

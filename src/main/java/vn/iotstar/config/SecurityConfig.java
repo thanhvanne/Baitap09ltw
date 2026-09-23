@@ -2,13 +2,10 @@ package vn.iotstar.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
@@ -20,19 +17,13 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-
     @Bean
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http
     ) throws Exception {
 
         http
-
             .authorizeHttpRequests(auth -> auth
-
-                // =====================================
-                // PUBLIC
-                // =====================================
 
                 .requestMatchers(
                     "/",
@@ -50,43 +41,20 @@ public class SecurityConfig {
                 )
                 .permitAll()
 
-
-                // =====================================
-                // ADMIN ONLY
-                // =====================================
-
                 .requestMatchers(
                     "/users/**",
                     "/dashboard"
                 )
                 .hasRole("ADMIN")
 
-
-                // =====================================
-                // USER + ADMIN
-                //
-                // Ownership của Product được kiểm tra
-                // thêm ở ProductService.
-                // =====================================
-
                 .requestMatchers(
                     "/products/**"
                 )
                 .authenticated()
 
-
-                // =====================================
-                // CÒN LẠI
-                // =====================================
-
                 .anyRequest()
                 .authenticated()
             )
-
-
-            // =========================================
-            // LOGIN
-            // =========================================
 
             .formLogin(form -> form
 
@@ -95,11 +63,8 @@ public class SecurityConfig {
                 .loginProcessingUrl("/login")
 
                 /*
-                 * Giá trị của field "username"
-                 * có thể là:
-                 *
-                 * admin
-                 * hoặc admin@gmail.com
+                 * Field tên username nhưng value
+                 * có thể là username hoặc email.
                  */
                 .usernameParameter("username")
 
@@ -107,15 +72,12 @@ public class SecurityConfig {
 
                 .defaultSuccessUrl("/", true)
 
-                .failureUrl("/login?error=true")
+                .failureUrl(
+                    "/login?error=true"
+                )
 
                 .permitAll()
             )
-
-
-            // =========================================
-            // LOGOUT
-            // =========================================
 
             .logout(logout -> logout
 
@@ -129,22 +91,28 @@ public class SecurityConfig {
 
                 .clearAuthentication(true)
 
-                .deleteCookies("JSESSIONID")
+                .deleteCookies(
+                    "JSESSIONID"
+                )
 
                 .permitAll()
             )
 
-
-            // =========================================
-            // ACCESS DENIED
-            // =========================================
+            /*
+             * Stateful session authentication.
+             * Mỗi account chỉ giữ một session mới nhất.
+             */
+            .sessionManagement(session ->
+                session
+                    .maximumSessions(1)
+                    .maxSessionsPreventsLogin(false)
+            )
 
             .exceptionHandling(exception ->
                 exception.accessDeniedPage(
                     "/access-denied"
                 )
             );
-
 
         return http.build();
     }

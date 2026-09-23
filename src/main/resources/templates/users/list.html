@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="vi"
       xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
@@ -10,9 +11,9 @@
 
 <body>
 
-<main class="container" layout:fragment="content">
+<main class="container"
+      layout:fragment="content">
 
-    <!-- TITLE -->
     <div class="page-title">
 
         <div>
@@ -20,10 +21,23 @@
             <p>Danh sách tài khoản trong hệ thống</p>
         </div>
 
+        <a class="btn primary"
+           th:href="@{/users/new}">
+            + Thêm User
+        </a>
+
     </div>
 
+    <div class="alert success"
+         th:if="${success}"
+         th:text="${success}">
+    </div>
 
-    <!-- SEARCH -->
+    <div class="alert error"
+         th:if="${error}"
+         th:text="${error}">
+    </div>
+
     <form class="search"
           method="get"
           th:action="@{/users}">
@@ -46,8 +60,6 @@
 
     </form>
 
-
-    <!-- TABLE -->
     <div class="table-wrap">
 
         <table>
@@ -69,15 +81,10 @@
 
             <tbody>
 
-            <!-- USERS -->
             <tr th:each="u : ${users.content}">
 
-                <!-- ID -->
-                <td th:text="${u.id}">
-                </td>
+                <td th:text="${u.id}"></td>
 
-
-                <!-- IMAGE -->
                 <td>
 
                     <img th:if="${u.images != null
@@ -93,56 +100,38 @@
 
                 </td>
 
+                <td th:text="${u.username}"></td>
 
-                <!-- USERNAME -->
-                <td th:text="${u.username}">
-                </td>
+                <td th:text="${u.fullName}"></td>
 
+                <td th:text="${u.email}"></td>
 
-                <!-- FULL NAME -->
-                <td th:text="${u.fullName}">
-                </td>
+                <td th:text="${u.roleName}"></td>
 
+                <td th:text="${u.productCount}"></td>
 
-                <!-- EMAIL -->
-                <td th:text="${u.email}">
-                </td>
-
-
-                <!-- ROLE -->
-                <td th:text="${u.roleName}">
-                </td>
-
-
-                <!-- PRODUCT COUNT -->
-                <td th:text="${u.productCount}">
-                </td>
-
-
-                <!-- STATUS -->
                 <td>
 
                     <span th:if="${u.enabled}"
-                          style="color: green;">
+                          class="status active">
                         Hoạt động
                     </span>
 
                     <span th:unless="${u.enabled}"
-                          style="color: red;">
+                          class="status inactive">
                         Đã khóa
                     </span>
 
                 </td>
 
-
-                <!-- CREATED AT -->
                 <td th:text="${u.createdAt != null
-                    ? #temporals.format(u.createdAt, 'dd/MM/yyyy HH:mm')
+                    ? #temporals.format(
+                        u.createdAt,
+                        'dd/MM/yyyy HH:mm'
+                    )
                     : ''}">
                 </td>
 
-
-                <!-- ACTIONS -->
                 <td class="actions">
 
                     <a class="btn secondary small"
@@ -150,10 +139,8 @@
                         Sửa
                     </a>
 
-
                     <form th:action="@{/users/delete/{id}(id=${u.id})}"
-                          method="post"
-                          style="display:inline">
+                          method="post">
 
                         <input type="hidden"
                                th:name="${_csrf.parameterName}"
@@ -171,12 +158,10 @@
 
             </tr>
 
-
-            <!-- EMPTY -->
             <tr th:if="${users.content.isEmpty()}">
 
                 <td colspan="10"
-                    style="text-align:center">
+                    class="empty">
                     Không có người dùng.
                 </td>
 
@@ -188,12 +173,9 @@
 
     </div>
 
-
-    <!-- PAGINATION -->
     <div class="pagination"
          th:if="${users.totalPages > 1}">
 
-        <!-- PREVIOUS -->
         <a th:if="${users.hasPrevious()}"
            th:href="@{/users(
                page=${users.number - 1},
@@ -202,24 +184,13 @@
             Trước
         </a>
 
-
-        <!-- PAGE INFO -->
         <span>
-
             Trang
-
-            <strong th:text="${users.number + 1}">
-            </strong>
-
+            <strong th:text="${users.number + 1}"></strong>
             /
-
-            <strong th:text="${users.totalPages}">
-            </strong>
-
+            <strong th:text="${users.totalPages}"></strong>
         </span>
 
-
-        <!-- NEXT -->
         <a th:if="${users.hasNext()}"
            th:href="@{/users(
                page=${users.number + 1},

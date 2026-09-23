@@ -6,47 +6,100 @@
       layout:decorate="~{layouts/layout}">
 
 <head>
-    <title>Sửa User</title>
+    <title th:text="${createMode ? 'Thêm User' : 'Sửa User'}">
+        User
+    </title>
 </head>
 
 <body>
 
-<main
-    class="container narrow"
-    layout:fragment="content">
+<main class="container narrow"
+      layout:fragment="content">
 
-    <h1>Sửa User</h1>
+    <div class="panel">
 
-    <form
-        class="form-grid"
-        th:action="@{/users/edit/{id}(id=${user.id})}"
-        th:object="${user}"
-        method="post">
+        <h1 th:text="${createMode ? 'Thêm User' : 'Sửa User'}">
+            User
+        </h1>
 
-        <label>Username</label>
-        <input th:field="*{username}">
-
-        <label>Email</label>
-        <input th:field="*{email}">
-
-        <label>Họ tên</label>
-        <input th:field="*{fullName}">
-
-        <label>Role ID</label>
-        <input type="number"
-               th:field="*{roleId}">
-
-        <label>Enabled</label>
-        <input type="checkbox"
-               th:field="*{enabled}">
-
-        <div>
-            <button class="btn primary">
-                Lưu
-            </button>
+        <div class="alert error"
+             th:if="${error}"
+             th:text="${error}">
         </div>
 
-    </form>
+        <div class="note"
+             th:if="${createMode}">
+            User do Admin tạo có mật khẩu mặc định:
+            <strong>123456</strong>
+        </div>
+
+        <form class="form-grid"
+              th:action="${createMode}
+                  ? @{/users/new}
+                  : @{/users/edit/{id}(id=${user.id})}"
+              th:object="${user}"
+              method="post">
+
+            <label>Username</label>
+
+            <input type="text"
+                   th:field="*{username}"
+                   maxlength="50"
+                   required>
+
+            <label>Email</label>
+
+            <input type="email"
+                   th:field="*{email}"
+                   required>
+
+            <label>Họ tên</label>
+
+            <input type="text"
+                   th:field="*{fullName}"
+                   required>
+
+            <label>Vai trò</label>
+
+            <select th:field="*{roleId}"
+                    required>
+
+                <option value="">
+                    -- Chọn vai trò --
+                </option>
+
+                <option th:each="r : ${roles}"
+                        th:value="${r.id}"
+                        th:text="${r.name}">
+                </option>
+
+            </select>
+
+            <label>Enabled</label>
+
+            <div class="checkbox-row">
+                <input type="checkbox"
+                       th:field="*{enabled}">
+                <span>Cho phép đăng nhập</span>
+            </div>
+
+            <div>
+
+                <button class="btn primary"
+                        type="submit">
+                    Lưu
+                </button>
+
+                <a class="btn secondary"
+                   th:href="@{/users}">
+                    Hủy
+                </a>
+
+            </div>
+
+        </form>
+
+    </div>
 
 </main>
 

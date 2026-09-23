@@ -5,21 +5,36 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "otp_tokens")
+@Table(
+    name = "otp_tokens",
+    indexes = {
+        @Index(
+            name = "idx_otp_user_type",
+            columnList = "user_id,type"
+        )
+    }
+)
 public class OtpToken {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 6)
-    private String otp;
+    @Column(
+        name = "otp_hash",
+        nullable = false,
+        length = 100
+    )
+    private String otpHash;
 
     @Column(nullable = false, length = 30)
     private String type;
 
     @Column(name = "expires_at", nullable = false)
     private LocalDateTime expiresAt;
+
+    @Column(nullable = false)
+    private int attempts = 0;
 
     @Column(nullable = false)
     private boolean used = false;
@@ -38,12 +53,12 @@ public class OtpToken {
         return id;
     }
 
-    public String getOtp() {
-        return otp;
+    public String getOtpHash() {
+        return otpHash;
     }
 
-    public void setOtp(String otp) {
-        this.otp = otp;
+    public void setOtpHash(String otpHash) {
+        this.otpHash = otpHash;
     }
 
     public String getType() {
@@ -62,6 +77,14 @@ public class OtpToken {
         this.expiresAt = expiresAt;
     }
 
+    public int getAttempts() {
+        return attempts;
+    }
+
+    public void setAttempts(int attempts) {
+        this.attempts = attempts;
+    }
+
     public boolean isUsed() {
         return used;
     }
@@ -74,11 +97,15 @@ public class OtpToken {
         return createdAt;
     }
 
-    public void setUser(User user) {
-        this.user = user;
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 
     public User getUser() {
         return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 }

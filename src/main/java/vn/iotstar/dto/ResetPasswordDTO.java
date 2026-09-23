@@ -1,19 +1,33 @@
 package vn.iotstar.dto;
 
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 public class ResetPasswordDTO {
 
-    @NotBlank
+    @Email(message = "Email không hợp lệ.")
+    @NotBlank(message = "Email không được để trống.")
     private String email;
 
-    @NotBlank
+    @NotBlank(message = "OTP không được để trống.")
+    @Size(
+        min = 6,
+        max = 6,
+        message = "OTP phải gồm 6 chữ số."
+    )
     private String otp;
 
-    @NotBlank
-    @Size(min = 6, max = 100)
+    @NotBlank(message = "Mật khẩu không được để trống.")
+    @Size(
+        min = 6,
+        max = 100,
+        message = "Mật khẩu phải có ít nhất 6 ký tự."
+    )
     private String password;
+
+    @NotBlank(message = "Vui lòng xác nhận mật khẩu.")
+    private String confirmPassword;
 
     public ResetPasswordDTO() {
     }
@@ -40,5 +54,16 @@ public class ResetPasswordDTO {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getConfirmPassword() {
+        return confirmPassword;
+    }
+
+    public void setConfirmPassword(
+            String confirmPassword
+    ) {
+        this.confirmPassword =
+            confirmPassword;
     }
 }
